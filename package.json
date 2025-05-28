@@ -1,11 +1,11 @@
 {
-  "name": "ws-proxy",
+  "name": "ssh-ws-proxy",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node server.js"
   },
   "dependencies": {
-    "http-proxy": "^1.18.1"
+    "ws": "^8.0.0"
   }
 }

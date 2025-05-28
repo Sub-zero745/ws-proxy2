@@ -1,30 +1,34 @@
+const WebSocket = require('ws');
 const http = require('http');
-const httpProxy = require('http-proxy');
+const net = require('net');
 
-const target = 'ws://207.174.40.206:80';
+const SSH_HOST = '5.34.178.157';
+const SSH_PORT = 2086;
+const WS_PATH = '/subzero';
 
-const proxy = httpProxy.createProxyServer({
-  target,
-  ws: true,
-  changeOrigin: true,
-});
+const server = http.createServer();
 
-const server = http.createServer((req, res) => {
-  proxy.web(req, res, (err) => {
-    console.error("Error proxy.web:", err);
-    res.writeHead(502);
-    res.end("Bad gateway: " + err.message);
+const wss = new WebSocket.Server({ noServer: true });
+
+wss.on('connection', (ws) => {
+  const socket = net.connect(SSH_PORT, SSH_HOST, () => {
+    ws.on('message', (msg) => socket.write(msg));
+    socket.on('data', (data) => ws.send(data));
   });
+
+  socket.on('error', () => ws.close());
+  ws.on('close', () => socket.end());
 });
 
 server.on('upgrade', (req, socket, head) => {
-  proxy.ws(req, socket, head, (err) => {
-    console.error("Error proxy.ws:", err);
+  if (req.url === WS_PATH) {
+    wss.handleUpgrade(req, socket, head, (ws) => {
+      wss.emit('connection', ws, req);
+    });
+  } else {
+    socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
     socket.destroy();
-  });
+  }
 });
 
-const PORT = process.env.PORT || 8080;
-server.listen(PORT, () => {
-  console.log(`Proxy WebSocket escuchando en puerto ${PORT}`);
-});
+server.listen(process.env.PORT || 8080);

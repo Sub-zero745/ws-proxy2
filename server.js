@@ -4,7 +4,7 @@ const net = require('net');
 
 const SSH_HOST = '5.34.178.157';
 const SSH_PORT = 2086;
-const WS_PATH = '/subzero';
+const WS_PATH = '/sub-zero';
 
 const server = http.createServer();
 
